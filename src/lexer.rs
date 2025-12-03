@@ -42,7 +42,7 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: &str) -> Self {
         let chars: Vec<char> = input.chars().collect();
-        let current = chars.get(0).copied();
+        let current = chars.first().copied();
 
         Lexer {
             input: chars,
@@ -149,7 +149,7 @@ impl Lexer {
             None => return Token::Eof,
         };
 
-        let token = match ch {
+        match ch {
             '(' => {
                 self.advance();
                 Token::LeftParen
@@ -182,7 +182,8 @@ impl Lexer {
                 self.advance();
                 Token::Semicolon
             }
-            _ if ch.is_alphanumeric() || ch == '_' => {
+            // ident must start with letter
+            _ if ch.is_alphabetic() => {
                 let ident = self.read_identifier();
 
                 match ident.as_str() {
@@ -222,9 +223,7 @@ impl Lexer {
                 self.advance();
                 Token::Unknown(ch)
             }
-        };
-
-        token
+        }
     }
 
     pub fn tokenize(&mut self) -> Vec<Token> {
@@ -269,6 +268,34 @@ mod tests {
             ])
         );
     }
+
+    #[test]
+    fn array_parameter() {
+        let input = "function bar(uint256[3] memory arr) external {}";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            Vec::from([
+                Token::Function,
+                Token::Identifier("bar".to_string()),
+                Token::LeftParen,
+                Token::Type("uint256".to_string()),
+                Token::LeftBracket,
+                Token::Number("3".to_string()),
+                Token::RightBracket,
+                Token::Memory,
+                Token::Identifier("arr".to_string()),
+                Token::RightParen,
+                Token::External,
+                Token::LeftBrace,
+                Token::RightBrace,
+                Token::Eof,
+            ])
+        );
+    }
+
     #[test]
     fn function_with_params() {
         let input = r#"
