@@ -34,12 +34,29 @@ impl FunctionOutput {
 
 // tabbed output, default
 pub fn output_tsv(functions: &[FunctionOutput]) {
+    let max_len = functions
+        .iter()
+        .map(|f| f.signature.len())
+        .max()
+        .unwrap_or(0);
     // header
-    println!("{:<15} {:<30} {}", "selector", "signature", "file");
+    println!(
+        "{:<15} {:<len$} {}",
+        "selector",
+        "signature",
+        "file",
+        len = max_len
+    );
 
     // rows
     for func in functions {
-        println!("{:<15} {:<30} {}", func.selector, func.signature, func.file);
+        println!(
+            "{:<15} {:<len$} {}",
+            func.selector,
+            func.signature,
+            func.file,
+            len = max_len
+        );
     }
 }
 
