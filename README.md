@@ -27,9 +27,11 @@ $ sift -f json counter/src/Counter.sol
     "file": "counter/src/Counter.sol"
   }
 ]
+```
 
 ### example: erc20
 
+```
 $ sift erc20.sol
 selector        signature                             file
 0xa9059cbb      transfer(address,uint256)             erc20.sol
