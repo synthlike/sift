@@ -8,11 +8,10 @@ pub struct FunctionOutput {
     pub signature: String,
     #[serde(skip_serializing)]
     pub visibility: String,
-    pub file: String,
 }
 
 impl FunctionOutput {
-    pub fn from_function(func: &Function, file: String) -> Self {
+    pub fn from_function(func: &Function) -> Self {
         let signature = func.signature();
         let selector = compute_selector(&signature);
         let visibility = match func.visibility {
@@ -27,7 +26,6 @@ impl FunctionOutput {
             selector: format_selector(&selector),
             signature,
             visibility,
-            file,
         }
     }
 }
@@ -40,21 +38,14 @@ pub fn output_tsv(functions: &[FunctionOutput]) {
         .max()
         .unwrap_or(0);
     // header
-    println!(
-        "{:<15} {:<len$} {}",
-        "selector",
-        "signature",
-        "file",
-        len = max_len
-    );
+    println!("{:<15} {:<len$}", "selector", "signature", len = max_len);
 
     // rows
     for func in functions {
         println!(
-            "{:<15} {:<len$} {}",
+            "{:<15} {:<len$}",
             func.selector,
             func.signature,
-            func.file,
             len = max_len
         );
     }

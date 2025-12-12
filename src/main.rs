@@ -1,4 +1,4 @@
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -19,14 +19,9 @@ use crate::parser::Parser as SolidityParser;
 struct Cli {
     #[arg(value_name = "PATH")]
     path: PathBuf,
-    #[arg(short, long, value_enum, default_value = "tsv")]
-    format: OutputFormat,
-}
 
-#[derive(Clone, ValueEnum)]
-enum OutputFormat {
-    Tsv,
-    Json,
+    #[arg(short, long)]
+    json: bool,
 }
 
 fn main() {
@@ -55,14 +50,13 @@ fn main() {
         }
     }
 
-    match cli.format {
-        OutputFormat::Tsv => output_tsv(&all_functions),
-        OutputFormat::Json => {
-            if let Err(e) = output_json(&all_functions) {
-                eprintln!("error formatting JSON: {}", e);
-                std::process::exit(1);
-            }
+    if cli.json {
+        if let Err(e) = output_json(&all_functions) {
+            eprintln!("error formatting JSON: {}", e);
+            std::process::exit(1);
         }
+    } else {
+        output_tsv(&all_functions)
     }
 }
 
@@ -86,11 +80,9 @@ fn extract_functions_from_file(
     let mut parser = SolidityParser::new(tokens);
     let functions = parser.parse_all_functions();
 
-    let file_name = path.display().to_string();
-
     let output: Vec<FunctionOutput> = functions
         .iter()
-        .map(|f| FunctionOutput::from_function(f, file_name.clone()))
+        .map(|f| FunctionOutput::from_function(f))
         .collect();
 
     Ok(output)
