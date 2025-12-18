@@ -1,5 +1,5 @@
 use crate::{
-    ast::{DataLocation, Function, Mutability, Parameter, Type, Visibility},
+    ast::{DataLocation, Function, Mutability, Parameter, Type, Variable, Visibility},
     lexer::Token,
 };
 
@@ -39,6 +39,37 @@ impl Parser {
         }
     }
 
+    pub fn parse_variable(&mut self) -> Result<Variable, String> {
+        let type_name = self.parse_type()?;
+        let visibility = self.parse_visibility()?;
+
+        let name = match self.current() {
+            Token::Identifier(n) => {
+                let name = n.clone();
+                self.advance();
+                name
+            }
+            _ => return Err(format!("expected identifier, found: {:?}", self.current())),
+        };
+
+        if self.current() == &Token::Semicolon {
+            self.advance();
+        }
+
+        let returns = Parameter {
+            type_name: type_name.clone(),
+            name: None,
+            data_location: None,
+        };
+
+        Ok(Variable {
+            type_name,
+            name,
+            visibility,
+            returns,
+        })
+    }
+
     pub fn parse_function(&mut self) -> Result<Function, String> {
         self.expect(Token::Function)?;
 
@@ -48,7 +79,7 @@ impl Parser {
                 self.advance();
                 name
             }
-            _ => return Err(format!("unexpected identifier: {:?}", self.current())),
+            _ => return Err(format!("expected identifier, found: {:?}", self.current())),
         };
 
         self.expect(Token::LeftParen)?;
@@ -232,12 +263,45 @@ impl Parser {
 
         functions
     }
+
+    pub fn parse_all_view_variables(&mut self) -> Vec<Variable> {
+        let mut variables = Vec::new();
+
+        while self.current() != &Token::Eof {
+            if matches!(self.current(), Token::Type(_)) {
+                match self.parse_variable() {
+                    Ok(var) => variables.push(var),
+                    Err(_) => {
+                        self.advance();
+                    }
+                }
+            } else {
+                self.advance();
+            }
+        }
+
+        variables
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::lexer::Lexer;
+
+    #[test]
+    fn variable() {
+        let input = "uint256 public number;";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let var = parser.parse_variable().unwrap();
+
+        assert_eq!(var.name, "number");
+        assert_eq!(var.visibility, Visibility::Public);
+        assert_eq!(var.type_name.canonical(), "uint256");
+        assert_eq!(var.returns.type_name.canonical(), "uint256");
+    }
 
     #[test]
     fn simple() {

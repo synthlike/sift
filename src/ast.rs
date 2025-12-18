@@ -1,4 +1,12 @@
 #[derive(Clone, Debug, PartialEq)]
+pub struct Variable {
+    pub type_name: Type,
+    pub name: String,
+    pub visibility: Visibility,
+    pub returns: Parameter,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub name: String,
     pub parameters: Vec<Parameter>,
