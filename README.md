@@ -1,6 +1,9 @@
 # sift
 
-sift is a simple CLI tool for extracting function selectors from Solidity source code.
+sift is a simple CLI tool for extracting function selectors from Solidity source code.  
+It can be used to maintain a local database of function selectors parsed from Solidity code.
+
+Support for SQLite and Vyper is planned for future releases.
 
 **Note:** This is a personal learning project. While functional, it may not cover every edge case in the Solidity grammar.
 
