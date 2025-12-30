@@ -61,3 +61,9 @@ $ ./sift --json assets/erc20.sol
   }
 ]
 ```
+
+Sift can also be run against a directory of Solidity files, and duplicates can be removed using jq.
+
+```bash
+$ ./sift --json assets | jq 'unique_by(.selector)'
+```
