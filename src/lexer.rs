@@ -193,8 +193,8 @@ impl Lexer {
                     Token::Unknown('=') // we don't need anything more for now
                 }
             }
-            // ident must start with letter
-            _ if ch.is_alphabetic() => {
+            // ident must start with letter or underscore
+            _ if ch.is_alphabetic() || ch == '_' => {
                 let ident = self.read_identifier();
 
                 match ident.as_str() {

@@ -39,6 +39,30 @@ impl Parser {
         }
     }
 
+    fn advance_braced_block(&mut self) {
+        if self.current() != &Token::LeftBrace {
+            return;
+        }
+
+        let mut depth = 0;
+        while self.current() != &Token::Eof {
+            match self.current() {
+                Token::LeftBrace => {
+                    depth += 1;
+                    self.advance();
+                }
+                Token::RightBrace => {
+                    depth -= 1;
+                    self.advance();
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                _ => self.advance(),
+            }
+        }
+    }
+
     pub fn parse_variable(&mut self) -> Result<Variable, String> {
         let type_name = self.parse_type()?;
         let visibility = self.parse_visibility()?;
@@ -97,6 +121,8 @@ impl Parser {
         } else {
             None
         };
+
+        self.advance_braced_block();
 
         Ok(Function {
             name,
@@ -356,5 +382,20 @@ mod tests {
         let func = parser.parse_function().unwrap();
 
         assert_eq!(func.signature(), "bar(uint256[],uint256[3])");
+    }
+
+    #[test]
+    fn function_with_body_and_public_visibility() {
+        let input = "function setValue(uint256 _value) public { value = _value; }";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let func = parser.parse_function().unwrap();
+
+        assert_eq!(func.name, "setValue");
+        assert_eq!(func.parameters.len(), 1);
+        assert_eq!(func.parameters[0].type_name.canonical(), "uint256");
+        assert_eq!(func.visibility, Visibility::Public);
+        assert_eq!(func.signature(), "setValue(uint256)");
     }
 }
