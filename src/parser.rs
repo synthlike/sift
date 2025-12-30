@@ -164,6 +164,21 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
+        if self.current() == &Token::Mapping {
+            self.advance();
+            self.expect(Token::LeftParen)?;
+
+            let key_type = self.parse_type()?;
+
+            self.expect(Token::Arrow)?;
+
+            let value_type = self.parse_type()?; // recursive, value could be another mapping
+
+            self.expect(Token::RightParen)?;
+
+            return Ok(Type::Mapping(Box::new(key_type), Box::new(value_type)));
+        }
+
         let base_type = match self.current() {
             Token::Type(t) => {
                 let type_name = t.clone();
@@ -244,31 +259,19 @@ impl Parser {
         }
     }
 
-    pub fn parse_all_functions(&mut self) -> Vec<Function> {
+    pub fn parse_all_symbols(&mut self) -> (Vec<Function>, Vec<Variable>) {
         let mut functions = Vec::new();
+        let mut variables = Vec::new();
 
         while self.current() != &Token::Eof {
             if self.current() == &Token::Function {
                 match self.parse_function() {
                     Ok(func) => functions.push(func),
                     Err(_) => {
-                        // skip to next func on err
                         self.advance();
                     }
                 }
-            } else {
-                self.advance();
-            }
-        }
-
-        functions
-    }
-
-    pub fn parse_all_view_variables(&mut self) -> Vec<Variable> {
-        let mut variables = Vec::new();
-
-        while self.current() != &Token::Eof {
-            if matches!(self.current(), Token::Type(_)) {
+            } else if matches!(self.current(), Token::Type(_) | Token::Mapping) {
                 match self.parse_variable() {
                     Ok(var) => variables.push(var),
                     Err(_) => {
@@ -280,7 +283,7 @@ impl Parser {
             }
         }
 
-        variables
+        (functions, variables)
     }
 }
 

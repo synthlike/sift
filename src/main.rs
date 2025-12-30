@@ -78,12 +78,19 @@ fn extract_functions_from_file(
     let tokens = lexer.tokenize();
 
     let mut parser = SolidityParser::new(tokens);
-    let functions = parser.parse_all_functions();
+    let (functions, variables) = parser.parse_all_symbols();
 
-    let output: Vec<FunctionOutput> = functions
+    let mut functions_output: Vec<FunctionOutput> = functions
         .iter()
         .map(|f| FunctionOutput::from_function(f))
         .collect();
 
-    Ok(output)
+    let variables_output: Vec<FunctionOutput> = variables
+        .iter()
+        .filter_map(|v| FunctionOutput::from_variable(v))
+        .collect();
+
+    functions_output.extend(variables_output);
+
+    Ok(functions_output)
 }

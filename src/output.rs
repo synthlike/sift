@@ -1,4 +1,4 @@
-use crate::ast::{Function, Visibility};
+use crate::ast::{Function, Variable, Visibility};
 use crate::selector::{compute_selector, format_selector};
 use serde::Serialize;
 
@@ -27,6 +27,21 @@ impl FunctionOutput {
             signature,
             visibility,
         }
+    }
+
+    pub fn from_variable(var: &Variable) -> Option<Self> {
+        if var.visibility != Visibility::Public {
+            return None;
+        }
+
+        let signature = var.signature();
+        let selector = compute_selector(&signature);
+
+        Some(FunctionOutput {
+            selector: format_selector(&selector),
+            signature,
+            visibility: "public".to_string(),
+        })
     }
 }
 

@@ -2,6 +2,7 @@
 pub enum Token {
     Contract,
     Function,
+    Mapping,
     Public,
     External,
     Internal,
@@ -23,6 +24,7 @@ pub enum Token {
     RightBracket, // ]
     Comma,        // ,
     Semicolon,    // ;
+    Arrow,        // =>
 
     Identifier(String),
     Number(String),
@@ -182,6 +184,15 @@ impl Lexer {
                 self.advance();
                 Token::Semicolon
             }
+            '=' => {
+                self.advance();
+                if self.current == Some('>') {
+                    self.advance();
+                    Token::Arrow
+                } else {
+                    Token::Unknown('=') // we don't need anything more for now
+                }
+            }
             // ident must start with letter
             _ if ch.is_alphabetic() => {
                 let ident = self.read_identifier();
@@ -189,6 +200,7 @@ impl Lexer {
                 match ident.as_str() {
                     "contract" => Token::Contract,
                     "function" => Token::Function,
+                    "mapping" => Token::Mapping,
                     "external" => Token::External,
                     "public" => Token::Public,
                     "internal" => Token::Internal,
